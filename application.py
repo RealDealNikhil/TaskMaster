@@ -25,7 +25,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 @app.route('/')
 @login_required
 def index():
-  return "Success"
+  return flask.render_template("index.html")
 
 @app.route('/login')
 def login():
