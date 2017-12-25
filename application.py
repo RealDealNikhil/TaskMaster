@@ -6,6 +6,8 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 
+from helpers import *
+
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
 CLIENT_SECRETS_FILE = "client_secret.json"
@@ -15,10 +17,15 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 app = flask.Flask(__name__)
+app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\\xefv\\xf2\\x84\\xd1Zq\\xad\\xd2\\\\!'
+
+# Configure oauth2 to work without https locally
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 @app.route('/')
+@login_required
 def index():
-  return "Index"
+  return "Success"
 
 @app.route('/login')
 def login():
@@ -77,15 +84,5 @@ def oauth2callback():
   flask.session['credentials'] = credentials_to_dict(credentials)
 
   return flask.redirect(flask.url_for('login'))
-
-def credentials_to_dict(credentials):
-  return {'token': credentials.token,
-          'refresh_token': credentials.refresh_token,
-          'token_uri': credentials.token_uri,
-          'client_id': credentials.client_id,
-          'client_secret': credentials.client_secret,
-          'scopes': credentials.scopes}
-
-
 
 
