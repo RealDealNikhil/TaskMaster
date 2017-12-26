@@ -113,8 +113,8 @@ def create():
 
   return flask.render_template("create.html")
 
-@app.route('/account')
-def account():
+@app.route('/preferences')
+def preferences():
 
-  return flask.render_template("account.html")
+  return flask.render_template("preferences.html")
 
