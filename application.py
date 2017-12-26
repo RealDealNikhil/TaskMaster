@@ -27,20 +27,12 @@ app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\
 # Configure oauth2 to work without https locally
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-# # ensure responses aren't cached
-# if app.config["DEBUG"]:
-#     @app.after_request
-#     def after_request(response):
-#         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-#         response.headers["Expires"] = 0
-#         response.headers["Pragma"] = "no-cache"
-#         return response
+"""
+IMPORTANT
 
-# # configure session to use filesystem (instead of signed cookies)
-# app.config["SESSION_FILE_DIR"] = gettempdir()
-# app.config["SESSION_PERMANENT"] = False
-# app.config["SESSION_TYPE"] = "filesystem"
-# Session(app)
+If there is an invalid grant error, we must re-authorize the user throught the
+authorization page.
+"""
 
 @app.route('/')
 @login_required
@@ -53,17 +45,19 @@ def index():
   calendar = googleapiclient.discovery.build(
       API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
+  # Get next 10 upcoming events
   now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
   eventsResult = calendar.events().list(
     calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
     orderBy='startTime').execute()
+  events = eventsResult.get('items', [])
 
   # Save credentials back to session in case access token was refreshed.
   # ACTION ITEM: In a production app, you likely want to save these
   #              credentials in a persistent database instead.
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  return flask.render_template("index.html", events=eventsResult)
+  return flask.render_template("index.html", events=events)
 
 @app.route('/login')
 def login():
