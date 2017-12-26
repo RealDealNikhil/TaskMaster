@@ -2,11 +2,14 @@ import os
 import flask
 import requests
 
+import googleapiclient.discovery
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
-import googleapiclient.discovery
+
+import datetime
 
 from helpers import *
+
 
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
@@ -15,6 +18,8 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
+API_SERVICE_NAME = 'calendar'
+API_VERSION = 'v3'
 
 app = flask.Flask(__name__)
 app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\\xefv\\xf2\\x84\\xd1Zq\\xad\\xd2\\\\!'
@@ -40,21 +45,30 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 @app.route('/')
 @login_required
 def index():
-  return flask.render_template("index.html")
-
-@app.route('/login')
-def login():
-  if 'credentials' not in flask.session:
-    return flask.redirect('authorize')
-
   # Load credentials from the session.
   credentials = google.oauth2.credentials.Credentials(
       **flask.session['credentials'])
+
+  # Build the calendar service object
+  calendar = googleapiclient.discovery.build(
+      API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+  now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+  eventsResult = calendar.events().list(
+    calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+    orderBy='startTime').execute()
 
   # Save credentials back to session in case access token was refreshed.
   # ACTION ITEM: In a production app, you likely want to save these
   #              credentials in a persistent database instead.
   flask.session['credentials'] = credentials_to_dict(credentials)
+
+  return flask.render_template("index.html", events=eventsResult)
+
+@app.route('/login')
+def login():
+  if 'credentials' not in flask.session:
+    return flask.redirect('authorize')
 
   return flask.redirect(flask.url_for('index'))
 
