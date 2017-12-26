@@ -9,5 +9,22 @@
 {% endblock %}
 
 {% block content %}
-  You are in the create page.
+  You are in the create page.<br>
+  <form>
+    <div class="form-group">
+      <label for="eventTitle">Title</label>
+      <input type="text" class="form-control" id="eventTitle" aria-describedby="titleHelp" placeholder="Enter event title">
+      <small id="titleHelp" class="form-text text-muted">Enter something unique and descriptive.</small>
+    </div>
+    <div class="form-group">
+      <label for="dueDate">Due Date</label>
+      <input type="date" class="form-control" id="dueDate" placeholder="When will this be due?">
+    </div>
+    <div class="form-group">
+      <label for="duration">Expected duration</label>
+      <input type="number" class="form-control" id="duration" aria-describedby="durationHelp" placeholder="How long do you think this will take you?">
+      <small id="durationHelp" class="form-text text-muted">(In hours)</small>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
 {% endblock %}

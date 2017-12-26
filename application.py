@@ -109,11 +109,13 @@ def oauth2callback():
   return flask.redirect(flask.url_for('login'))
 
 @app.route('/create')
+@login_required
 def create():
 
   return flask.render_template("create.html")
 
 @app.route('/preferences')
+@login_required
 def preferences():
 
   return flask.render_template("preferences.html")
