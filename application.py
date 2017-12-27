@@ -108,11 +108,15 @@ def oauth2callback():
 
   return flask.redirect(flask.url_for('login'))
 
-@app.route('/create')
+@app.route('/create', methods=["GET", "POST"])
 @login_required
 def create():
+  if flask.request.method == "POST":
 
-  return flask.render_template("create.html")
+    return flask.redirect(flask.url_for("index"))
+
+  else:
+    return flask.render_template("create.html")
 
 @app.route('/preferences')
 @login_required
