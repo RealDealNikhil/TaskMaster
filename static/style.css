@@ -1,3 +1,10 @@
 #mother {
   padding-top: 50px;
+  opacity: 1;
+  transition: 1s opacity;
+}
+
+#mother.fade-out {
+    opacity: 0;
+    transition: 1.5s opacity;
 }
