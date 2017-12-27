@@ -23,6 +23,7 @@ API_VERSION = 'v3'
 
 app = flask.Flask(__name__)
 app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\\xefv\\xf2\\x84\\xd1Zq\\xad\\xd2\\\\!'
+app.static_folder = 'static'
 
 # Configure oauth2 to work without https locally
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
