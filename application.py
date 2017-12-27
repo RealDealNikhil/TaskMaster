@@ -123,15 +123,7 @@ def create():
       description = flask.request.form.get("description")
 
     # Create start and end datetime objects
-    start_date = datetime.datetime.strptime(
-      dueDate + " 06:00:00", "%Y-%m-%d %H:%M:%S")
-    end_date = start_date + datetime.timedelta(hours=int(duration))
-
-    start = str(start_date)
-    end = str(end_date)
-
-    start = start[:10] + "T" + start[11:]
-    end = end[:10] + "T" + end[11:]
+    start, end = convert_start_end_duration(dueDate, "06:00:00", duration)
 
     # Create GCal event item
     event = {

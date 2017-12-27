@@ -1,5 +1,6 @@
 from flask import redirect, render_template, request, session, url_for
 from functools import wraps
+import datetime
 
 def credentials_to_dict(credentials):
   return {'token': credentials.token,
@@ -21,3 +22,13 @@ def login_required(f):
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
     return decorated_function
+
+def convert_start_end_duration(date, startTime, duration):
+  start_date = datetime.datetime.strptime(
+      date + " " + startTime, "%Y-%m-%d %H:%M:%S")
+  end_date = start_date + datetime.timedelta(hours=int(duration))
+  start = str(start_date)
+  end = str(end_date)
+  start = start[:10] + "T" + start[11:]
+  end = end[:10] + "T" + end[11:]
+  return start, end
