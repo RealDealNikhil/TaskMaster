@@ -113,6 +113,51 @@ def oauth2callback():
 def create():
   if flask.request.method == "POST":
 
+    # Get form items
+    summary = flask.request.form.get("eventSummary")
+    dueDate = flask.request.form.get("dueDate")
+    duration = flask.request.form.get("duration")
+    if not flask.request.form.get("description"):
+      description = ""
+    else:
+      description = flask.request.form.get("description")
+
+    # Create start and end datetime objects
+    start_date = datetime.datetime.strptime(
+      dueDate + " 06:00:00", "%Y-%m-%d %H:%M:%S")
+    end_date = start_date + datetime.timedelta(hours=int(duration))
+
+    start = str(start_date)
+    end = str(end_date)
+
+    start = start[:10] + "T" + start[11:]
+    end = end[:10] + "T" + end[11:]
+
+    # Create GCal event item
+    event = {
+      'summary': summary,
+      'description': description,
+      'start': {
+        'dateTime': start,
+        'timeZone': 'America/Los_Angeles'
+      },
+      'end': {
+        'dateTime': end,
+        'timeZone': 'America/Los_Angeles'
+      }
+    }
+
+    # Load credentials from the session.
+    credentials = google.oauth2.credentials.Credentials(
+      **flask.session['credentials'])
+
+    # Build the calendar service object
+    calendar = googleapiclient.discovery.build(
+      API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+    # Insert event into GCal
+    calendar.events().insert(calendarId='primary', body=event).execute()
+
     return flask.redirect(flask.url_for("index"))
 
   else:
