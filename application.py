@@ -125,17 +125,20 @@ def oauth2callback():
   myCredentials = google.oauth2.credentials.Credentials(
       **flask.session['credentials'])
 
-  # Build G+ service and get user email
-  service = googleapiclient.discovery.build('plus', 'v1', credentials=myCredentials)
-  myInfo = service.people().get(userId='me').execute()
-  print(myInfo)
+  # Build Google People service and get user info
+  service = googleapiclient.discovery.build('people', 'v1', credentials=myCredentials)
+  profile = service.people().get(
+    resourceName='people/me', personFields='names,emailAddresses').execute()
+  print(profile)
+  name = profile['names'][0]['displayName']
+  email = profile['emailAddresses'][0]['value']
 
-  # Insert user into mongodb
+  # Insert user into mongodb if user does not already exist in db
   # result = db.users.insert_one(
   #     {
   #       "credentials": credentials_to_dict(credentials),
-  #       "email": "",
-  #       "name": "",
+  #       "email": email,
+  #       "name": name,
   #       "wakeUp": "",
   #       "sleep": "",
   #       "free": ""
