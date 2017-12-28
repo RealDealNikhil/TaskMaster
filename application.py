@@ -129,21 +129,28 @@ def oauth2callback():
   service = googleapiclient.discovery.build('people', 'v1', credentials=myCredentials)
   profile = service.people().get(
     resourceName='people/me', personFields='names,emailAddresses').execute()
-  print(profile)
   name = profile['names'][0]['displayName']
   email = profile['emailAddresses'][0]['value']
 
-  # Insert user into mongodb if user does not already exist in db
-  # result = db.users.insert_one(
-  #     {
-  #       "credentials": credentials_to_dict(credentials),
-  #       "email": email,
-  #       "name": name,
-  #       "wakeUp": "",
-  #       "sleep": "",
-  #       "free": ""
-  #     }
-  #   )
+  # Check if user already exists in db
+  cursor = db.users.find({"email": email})
+  if cursor.count() == 0:
+    # Insert user into mongodb if user does not already exist in db
+    result = db.users.insert_one(
+        {
+          "credentials": credentials_to_dict(credentials),
+          "email": email,
+          "name": name,
+          "wakeUp": "",
+          "sleep": "",
+          "free": ""
+        }
+      )
+
+  # confirm user has been inserted into db
+  new_cursor = db.users.find({"email": email})
+  for document in cursor:
+    print(document)
 
   return flask.redirect(flask.url_for('index'))
 
