@@ -29,6 +29,7 @@ app.static_folder = 'static'
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 # Create connection to db
+# TODO: implement a users collection to store credentials outside of flask
 client = MongoClient()
 db = client.taskmaster
 

@@ -24,12 +24,12 @@
         </button>
         <a class="navbar-brand" href="{{ url_for('index') }}">TaskMaster</a>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
+            <div class="navbar-nav mr-auto">
                 <a class="nav-item nav-link" href="{{ url_for('index') }}">Home</a>
                 <a class="nav-item nav-link" href="{{ url_for('create') }}">Create an Event</a>
                 <a class="nav-item nav-link" href="{{ url_for('preferences') }}">Preferences</a>
             </div>
-            <div class="navbar-nav navbar-right">
+            <div class="navbar-nav ml-auto">
                 <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
             </div>
         </div>
