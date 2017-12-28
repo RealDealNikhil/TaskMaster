@@ -2,6 +2,7 @@ from flask import redirect, render_template, request, session, url_for
 from functools import wraps
 import datetime
 
+# self-explanatory
 def credentials_to_dict(credentials):
   return {'token': credentials.token,
           'refresh_token': credentials.refresh_token,
@@ -10,6 +11,7 @@ def credentials_to_dict(credentials):
           'client_secret': credentials.client_secret,
           'scopes': credentials.scopes}
 
+# Login required decorator
 def login_required(f):
     """
     Decorate routes to require login.
@@ -23,6 +25,8 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Convert user input for insertion into GCal
+# TEMPORARY UNTIL AUTO-SORT ALGORITHM IMPLEMENTATION
 def convert_start_end_duration(date, startTime, duration):
   start_date = datetime.datetime.strptime(
       date + " " + startTime, "%Y-%m-%d %H:%M:%S")

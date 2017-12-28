@@ -39,6 +39,7 @@ If there is an invalid grant error, we must re-authorize the user throught the
 authorization page.
 """
 
+# Index page
 @app.route('/')
 @login_required
 def index():
@@ -64,6 +65,7 @@ def index():
 
   return flask.render_template("index.html", events=events)
 
+# This and following methods create the login/Google authorization flow
 @app.route('/login', methods=["GET", "POST"])
 def login():
   if flask.request.method == "POST":
@@ -118,6 +120,7 @@ def oauth2callback():
 
   return flask.redirect(flask.url_for('index'))
 
+# Define parameters for insertion into GCal
 @app.route('/create', methods=["GET", "POST"])
 @login_required
 def create():
@@ -165,12 +168,14 @@ def create():
   else:
     return flask.render_template("create.html")
 
+# (User Settings)
 @app.route('/preferences')
 @login_required
 def preferences():
 
   return flask.render_template("preferences.html")
 
+# Logout
 @app.route('/logout')
 @login_required
 def logout():
@@ -178,7 +183,7 @@ def logout():
     del flask.session['credentials']
   return flask.redirect(flask.url_for('login'))
 
-# Update css and js static files
+# Methods to update to newest css and js static file links
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
