@@ -9,5 +9,28 @@
 {% endblock %}
 
 {% block content %}
-  You are in the preferences page.
+<div class="row justify-content-md-center">
+  <div class="col-md-10">
+    <h5 class="mb-2 text-muted">Preferences <i class="fas fa-cog"></i></h5>
+    <form action="{{ url_for('preferences') }}" method="post">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="Nikhil Suri">
+      </div>
+      <div class="form-group">
+        <label for="wakeUp">Ideal Wake-Up Time</label>
+        <input type="time" class="form-control" id="wakeUp" name="wakeUp" value="09:30">
+      </div>
+      <div class="form-group">
+        <label for="sleep">Ideal Sleep Time</label>
+        <input type="time" class="form-control" id="sleep" name="sleep" value="23:00">
+      </div>
+      <div class="form-group">
+        <label for="free">Ideal Free Time</label>
+        <input type="number" class="form-control" id="free" name="free" value="5">
+      </div>
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

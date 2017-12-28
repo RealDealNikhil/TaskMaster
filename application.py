@@ -17,7 +17,8 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ['https://www.googleapis.com/auth/calendar',
+  'profile']
 API_SERVICE_NAME = 'calendar'
 API_VERSION = 'v3'
 
@@ -117,7 +118,29 @@ def oauth2callback():
   # ACTION ITEM: In a production app, you likely want to save these
   #              credentials in a persistent database instead.
   credentials = flow.credentials
+
   flask.session['credentials'] = credentials_to_dict(credentials)
+
+  # Load credentials from the session.
+  myCredentials = google.oauth2.credentials.Credentials(
+      **flask.session['credentials'])
+
+  # Build G+ service and get user email
+  service = googleapiclient.discovery.build('plus', 'v1', credentials=myCredentials)
+  myInfo = service.people().get(userId='me').execute()
+  print(myInfo)
+
+  # Insert user into mongodb
+  # result = db.users.insert_one(
+  #     {
+  #       "credentials": credentials_to_dict(credentials),
+  #       "email": "",
+  #       "name": "",
+  #       "wakeUp": "",
+  #       "sleep": "",
+  #       "free": ""
+  #     }
+  #   )
 
   return flask.redirect(flask.url_for('index'))
 
@@ -160,6 +183,12 @@ def create():
     # Build the calendar service object
     calendar = googleapiclient.discovery.build(
       API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+    # get all events until due date
+
+    # get titles of previous events that we have sorted
+
+    # Insert record of sorting into db
 
     # Insert event into GCal
     calendar.events().insert(calendarId='primary', body=event).execute()
