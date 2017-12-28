@@ -7,7 +7,7 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
 import datetime
-
+from pymongo import MongoClient
 from helpers import *
 
 
@@ -28,6 +28,10 @@ app.static_folder = 'static'
 # Configure oauth2 to work without https locally
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+# Create connection to db
+client = MongoClient()
+db = client.taskmaster
+
 """
 IMPORTANT
 
@@ -38,6 +42,8 @@ authorization page.
 @app.route('/')
 @login_required
 def index():
+
+
   # Load credentials from the session.
   credentials = google.oauth2.credentials.Credentials(
       **flask.session['credentials'])
@@ -162,6 +168,7 @@ def preferences():
 
   return flask.render_template("preferences.html")
 
+# Update css and js static files
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
@@ -174,3 +181,13 @@ def dated_url_for(endpoint, **values):
                                      endpoint, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
+
+# Handle the google Invalid Grant error
+@app.errorhandler(google.auth.exceptions.RefreshError)
+def handle_invalid_grant(error):
+  return flask.redirect(flask.url_for('authorize'))
+
+
+
+
+
