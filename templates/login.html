@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block title %}
+  Login
+{% endblock %}
+
+{% block content %}
+  You are in the Login page.<br>
+  <form method="post">
+    <button type="submit" class="btn btn-primary">Login</button>
+  </form>
+{% endblock %}

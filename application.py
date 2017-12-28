@@ -42,8 +42,6 @@ authorization page.
 @app.route('/')
 @login_required
 def index():
-
-
   # Load credentials from the session.
   credentials = google.oauth2.credentials.Credentials(
       **flask.session['credentials'])
@@ -66,12 +64,17 @@ def index():
 
   return flask.render_template("index.html", events=events)
 
-@app.route('/login')
+@app.route('/login', methods=["GET", "POST"])
 def login():
-  if 'credentials' not in flask.session:
-    return flask.redirect('authorize')
+  if flask.request.method == "POST":
 
-  return flask.redirect(flask.url_for('index'))
+    if 'credentials' not in flask.session:
+      return flask.redirect(flask.url_for('authorize'))
+
+    return flask.redirect(flask.url_for('index'))
+
+  else:
+    return flask.render_template("login.html")
 
 @app.route('/authorize')
 def authorize():
@@ -113,7 +116,7 @@ def oauth2callback():
   credentials = flow.credentials
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  return flask.redirect(flask.url_for('login'))
+  return flask.redirect(flask.url_for('index'))
 
 @app.route('/create', methods=["GET", "POST"])
 @login_required
@@ -167,6 +170,13 @@ def create():
 def preferences():
 
   return flask.render_template("preferences.html")
+
+@app.route('/logout')
+@login_required
+def logout():
+  if 'credentials' in flask.session:
+    del flask.session['credentials']
+  return flask.redirect(flask.url_for('login'))
 
 # Update css and js static files
 @app.context_processor
