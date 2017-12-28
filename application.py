@@ -123,7 +123,7 @@ def oauth2callback():
 
   # Load credentials from the session.
   myCredentials = google.oauth2.credentials.Credentials(
-      **flask.session['credentials'])
+    **flask.session['credentials'])
 
   # Build Google People service and get user info
   service = googleapiclient.discovery.build('people', 'v1', credentials=myCredentials)
@@ -131,26 +131,25 @@ def oauth2callback():
     resourceName='people/me', personFields='names,emailAddresses').execute()
   name = profile['names'][0]['displayName']
   email = profile['emailAddresses'][0]['value']
+  # Keep track of user email
+  flask.session['email'] = email
 
   # Check if user already exists in db
   cursor = db.users.find({"email": email})
   if cursor.count() == 0:
     # Insert user into mongodb if user does not already exist in db
+    # Default wakeup/sleep time and free hours
+    # TODO: Inform user these are default values
     result = db.users.insert_one(
         {
           "credentials": credentials_to_dict(credentials),
           "email": email,
           "name": name,
-          "wakeUp": "",
-          "sleep": "",
-          "free": ""
+          "wakeUp": "07:00",
+          "sleep": "22:00",
+          "free": "4"
         }
       )
-
-  # confirm user has been inserted into db
-  new_cursor = db.users.find({"email": email})
-  for document in cursor:
-    print(document)
 
   return flask.redirect(flask.url_for('index'))
 
@@ -209,18 +208,48 @@ def create():
     return flask.render_template("create.html")
 
 # (User Settings)
-@app.route('/preferences')
+@app.route('/preferences', methods=["GET", "POST"])
 @login_required
 def preferences():
+  if flask.request.method == "POST":
+    # Get form info
+    name = flask.request.form.get("name")
+    wakeUp = flask.request.form.get("wakeUp")
+    sleep = flask.request.form.get("sleep")
+    free = flask.request.form.get("free")
 
-  return flask.render_template("preferences.html")
+    # Update db user info
+    result = db.users.update_one(
+      {"email": flask.session['email']},
+      {
+        "$set": {
+          "name": name,
+          "wakeUp": wakeUp,
+          "sleep": sleep,
+          "free": free
+        }
+      }
+    )
+
+    return flask.render_template("preferences.html", name=name, wakeUp=wakeUp,
+      sleep=sleep, free=free)
+
+  else:
+    # Query db for user info
+    cursor = db.users.find( { "email": flask.session['email'] } )
+    name = cursor[0]['name']
+    wakeUp = cursor[0]['wakeUp']
+    sleep = cursor[0]['sleep']
+    free = cursor[0]['free']
+
+    return flask.render_template("preferences.html", name=name, wakeUp=wakeUp,
+      sleep=sleep, free=free)
 
 # Logout
 @app.route('/logout')
 @login_required
 def logout():
-  if 'credentials' in flask.session:
-    del flask.session['credentials']
+  flask.session.clear()
   return flask.redirect(flask.url_for('login'))
 
 # Methods to update to newest css and js static file links
