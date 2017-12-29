@@ -23,7 +23,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar',
 API_SERVICE_NAME = 'calendar'
 API_VERSION = 'v3'
 
-# UTC offset
+# UTC offset for local time zone
 OFFSET = time.strftime('%z')
 OFFSET = OFFSET[:3] + ":" + OFFSET[3:]
 
@@ -136,6 +136,7 @@ def oauth2callback():
     resourceName='people/me', personFields='names,emailAddresses').execute()
   name = profile['names'][0]['displayName']
   email = profile['emailAddresses'][0]['value']
+
   # Keep track of user email
   flask.session['email'] = email
 
@@ -173,6 +174,33 @@ def create():
     else:
       description = flask.request.form.get("description")
 
+    # Load credentials from the session.
+    credentials = google.oauth2.credentials.Credentials(
+      **flask.session['credentials'])
+
+    # Build the calendar service object
+    calendar = googleapiclient.discovery.build(
+      API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+    # Get users preferences
+    preferences = db.users.find({"email": flask.session['email']})
+    wakeUp = preferences[0]['wakeUp']
+    sleep = preferences[0]['sleep']
+    free = preferences[0]['free']
+
+    # get all events until due date
+    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    eventsResult = calendar.events().list(
+      calendarId='primary', timeMin=now, timeMax=dueDate + ':00' + OFFSET,
+      singleEvents=True, orderBy='startTime').execute()
+    events = eventsResult.get('items', [])
+    print(events)
+
+    # get titles of previous events that we have sorted
+    sorted_events = db.events.find()
+
+    # Sort event into GCal
+
     # # Create start and end datetime objects
     # start, end = convert_start_end_duration(dueDate, "06:00:00", duration)
 
@@ -190,34 +218,17 @@ def create():
     #   }
     # }
 
-    # Load credentials from the session.
-    credentials = google.oauth2.credentials.Credentials(
-      **flask.session['credentials'])
 
-    # Build the calendar service object
-    calendar = googleapiclient.discovery.build(
-      API_SERVICE_NAME, API_VERSION, credentials=credentials)
-
-    # # Get users preferences
-    # preferences = db.users.find({"email": flask.session['email']})
-    # wakeUp = preferences[0]['wakeUp']
-    # sleep = preferences[0]['sleep']
-    # free = preferences[0]['free']
-
-    # get all events until due date
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    eventsResult = calendar.events().list(
-      calendarId='primary', timeMin=now, timeMax=dueDate + ':00' + OFFSET,
-      singleEvents=True, orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
-    print(events)
-
-    # # get titles of previous events that we have sorted
-
-    # # Insert record of sorting into db
-
-    # # Insert event into GCal
-    # calendar.events().insert(calendarId='primary', body=event).execute()
+    # Insert record of new sorting into db
+    # result = db.events.insert_one(
+    #   {
+    #     id
+    #     title
+    #     dueDate
+    #     duration
+    #     etc.
+    #   }
+    # )
 
     return flask.redirect(flask.url_for("index"))
 
