@@ -26,7 +26,7 @@ def login_required(f):
     return decorated_function
 
 # Convert user input for insertion into GCal
-# TEMPORARY UNTIL AUTO-SORT ALGORITHM IMPLEMENTATION
+# TEMPORARY UNTIL SORTING ALGORITHM IMPLEMENTATION
 def convert_start_end_duration(date, startTime, duration):
   start_date = datetime.datetime.strptime(
       date + " " + startTime, "%Y-%m-%d %H:%M:%S")
@@ -36,3 +36,8 @@ def convert_start_end_duration(date, startTime, duration):
   start = start[:10] + "T" + start[11:]
   end = end[:10] + "T" + end[11:]
   return start, end
+
+# sort: takes in event to sort, list of events that are already sorted, and user preferences
+# first implementation: insert event into first free space before dueDate
+def sort(event, sorted_events, unsorted_events, preferences):
+  return 0

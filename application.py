@@ -164,16 +164,20 @@ def oauth2callback():
 @login_required
 def create():
   if flask.request.method == "POST":
-
-    # Get form items
-    summary = flask.request.form.get("eventSummary")
-    dueDate = flask.request.form.get("dueDate")
-    duration = flask.request.form.get("duration")
-    if not flask.request.form.get("description"):
+    # check if description was provided
+     if not flask.request.form.get("description"):
       description = ""
     else:
       description = flask.request.form.get("description")
 
+    # Get form items and create temporary event item
+    event = {
+      'summary': flask.request.form.get("eventSummary")
+      'description': description
+      'dueDate': flask.request.form.get("dueDate")
+      'duration': flask.request.form.get("duration")
+    }
+    print(event)
     # Load credentials from the session.
     credentials = google.oauth2.credentials.Credentials(
       **flask.session['credentials'])
@@ -184,17 +188,14 @@ def create():
 
     # Get users preferences
     preferences = db.users.find({"email": flask.session['email']})
-    wakeUp = preferences[0]['wakeUp']
-    sleep = preferences[0]['sleep']
-    free = preferences[0]['free']
 
     # get all events until due date
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     eventsResult = calendar.events().list(
       calendarId='primary', timeMin=now, timeMax=dueDate + ':00' + OFFSET,
       singleEvents=True, orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
-    print(events)
+    unsorted_events = eventsResult.get('items', [])
+    print(unsorted_events)
 
     # get titles of previous events that we have sorted
     sorted_events = db.events.find()
@@ -217,7 +218,6 @@ def create():
     #     'timeZone': 'America/Los_Angeles'
     #   }
     # }
-
 
     # Insert record of new sorting into db
     # result = db.events.insert_one(
