@@ -28,9 +28,25 @@ API_VERSION = 'v3'
 OFFSET = time.strftime('%z')
 OFFSET = OFFSET[:3] + ":" + OFFSET[3:]
 
+# configure app
 app = flask.Flask(__name__)
 app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\\xefv\\xf2\\x84\\xd1Zq\\xad\\xd2\\\\!'
 app.static_folder = 'static'
+
+# ensure responses aren't cached
+if app.config["DEBUG"]:
+    @app.after_request
+    def after_request(response):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Expires"] = 0
+        response.headers["Pragma"] = "no-cache"
+        return response
+
+# configure session to use filesystem (instead of signed cookies)
+app.config["SESSION_FILE_DIR"] = gettempdir()
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 # Configure oauth2 to work without https locally
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
