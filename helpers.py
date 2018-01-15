@@ -1,6 +1,7 @@
 from flask import redirect, render_template, request, session, url_for
 from functools import wraps
 import datetime
+import requests
 
 # self-explanatory
 def credentials_to_dict(credentials):
@@ -36,8 +37,3 @@ def convert_start_end_duration(date, startTime, duration):
   start = start[:10] + "T" + start[11:]
   end = end[:10] + "T" + end[11:]
   return start, end
-
-# sort: takes in event to sort, list of events that are already sorted, and user preferences
-# first implementation: insert event into first free space before dueDate
-def sort(event, sorted_events, unsorted_events, preferences):
-  return 0

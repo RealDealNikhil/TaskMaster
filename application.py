@@ -1,6 +1,7 @@
 import os
 import flask
 import requests
+import json
 
 import googleapiclient.discovery
 import google.oauth2.credentials
@@ -165,16 +166,16 @@ def oauth2callback():
 def create():
   if flask.request.method == "POST":
     # check if description was provided
-     if not flask.request.form.get("description"):
+    if not flask.request.form.get("description"):
       description = ""
     else:
       description = flask.request.form.get("description")
 
     # Get form items and create temporary event item
     event = {
-      'summary': flask.request.form.get("eventSummary")
-      'description': description
-      'dueDate': flask.request.form.get("dueDate")
+      'summary': flask.request.form.get("eventSummary"),
+      'description': description,
+      'dueDate': flask.request.form.get("dueDate"),
       'duration': flask.request.form.get("duration")
     }
     print(event)
@@ -186,49 +187,22 @@ def create():
     calendar = googleapiclient.discovery.build(
       API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
-    # Get users preferences
+    # Get user's preferences
     preferences = db.users.find({"email": flask.session['email']})
 
     # get all events until due date
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     eventsResult = calendar.events().list(
-      calendarId='primary', timeMin=now, timeMax=dueDate + ':00' + OFFSET,
+      calendarId='primary', timeMin=now, timeMax=event['dueDate'] + ':00' + OFFSET,
       singleEvents=True, orderBy='startTime').execute()
-    unsorted_events = eventsResult.get('items', [])
-    print(unsorted_events)
+    events = eventsResult.get('items', [])
+    print(events)
 
-    # get titles of previous events that we have sorted
+    # get titles of previous events that we have sorted (cursor object)
     sorted_events = db.events.find()
 
     # Sort event into GCal
-
-    # # Create start and end datetime objects
-    # start, end = convert_start_end_duration(dueDate, "06:00:00", duration)
-
-    # # Create GCal event item
-    # event = {
-    #   'summary': summary,
-    #   'description': description,
-    #   'start': {
-    #     'dateTime': start,
-    #     'timeZone': 'America/Los_Angeles'
-    #   },
-    #   'end': {
-    #     'dateTime': end,
-    #     'timeZone': 'America/Los_Angeles'
-    #   }
-    # }
-
-    # Insert record of new sorting into db
-    # result = db.events.insert_one(
-    #   {
-    #     id
-    #     title
-    #     dueDate
-    #     duration
-    #     etc.
-    #   }
-    # )
+    print(sort(event, sorted_events, events, preferences))
 
     return flask.redirect(flask.url_for("index"))
 
@@ -299,6 +273,60 @@ def handle_invalid_grant(error):
   return flask.redirect(flask.url_for('authorize'))
 
 
+# sort: takes in event to sort, sorted events, all events until dueDate, and user preferences
+# event: dict, sorted_events: cursor objects, events: list, preference: list
+# first implementation: insert event into first free space before dueDate
+def sort(event, sorted_events, events, preferences):
+  # get free/busy data from now until dueDate
+  data = {
+    "timeMin": datetime.datetime.utcnow().isoformat() + 'Z',
+    "timeMax": event['dueDate'] + ':00' + OFFSET,
+    "timeZone": "America/Los_Angeles",
+    "items": [
+      {
+        "id": flask.session['email']
+      }
+    ]
+  }
+  headers = {
+    'Authorization': 'Bearer %s' % flask.session['credentials']['token'],
+    'Accept': 'application/json',
+    'Content-Type': 'application/json ; charset=UTF-8'
+  }
+  r = requests.post('https://www.googleapis.com/calendar/v3/freeBusy', data=json.dumps(data),
+    headers=headers)
+  freeBusy = json.loads(r.text)['calendars'][flask.session['email']]['busy']
+
+  return freeBusy
+
+
+# # Create start and end datetime objects
+# start, end = convert_start_end_duration(dueDate, "06:00:00", duration)
+
+# # Create GCal event item
+# event = {
+#   'summary': summary,
+#   'description': description,
+#   'start': {
+#     'dateTime': start,
+#     'timeZone': 'America/Los_Angeles'
+#   },
+#   'end': {
+#     'dateTime': end,
+#     'timeZone': 'America/Los_Angeles'
+#   }
+# }
+
+# Insert record of new sorting into db
+# result = db.events.insert_one(
+#   {
+#     id
+#     title
+#     dueDate
+#     duration
+#     etc.
+#   }
+# )
 
 
 
