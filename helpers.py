@@ -26,6 +26,12 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Return datetime object rounded up to nearest 10 mins
+def roundup10(tm):
+  return tm - datetime.timedelta(minutes=tm.minute % 10,
+    seconds=tm.second, microseconds=tm.microsecond) + datetime.timedelta(minutes=10)
+
+
 # Convert user input for insertion into GCal
 # TEMPORARY UNTIL SORTING ALGORITHM IMPLEMENTATION
 def convert_start_end_duration(date, startTime, duration):

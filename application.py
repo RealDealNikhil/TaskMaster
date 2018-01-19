@@ -293,9 +293,9 @@ def handle_invalid_grant(error):
 # event: dict, sorted_events: cursor objects, events: list, preference: list
 # first implementation: insert event into first free space before dueDate
 def sort(event, sorted_events, events, preferences):
-  # get free/busy data from now until dueDate
+  # get free/busy data from now (round up to nearest 10 mins) until dueDate
   data = {
-    "timeMin": datetime.datetime.utcnow().isoformat() + 'Z',
+    "timeMin": roundup10(datetime.datetime.utcnow()).isoformat() + 'Z',
     "timeMax": event['dueDate'] + ':00' + OFFSET,
     "timeZone": "America/Los_Angeles",
     "items": [
@@ -343,6 +343,5 @@ def sort(event, sorted_events, events, preferences):
 #     etc.
 #   }
 # )
-
 
 
