@@ -1,17 +1,14 @@
-import os
-import flask
-import requests
-import json
+import os, flask, requests, json, tempfile, datetime, time
 
 import googleapiclient.discovery
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
-import datetime
-import time
 from pymongo import MongoClient
+from dotenv import load_dotenv
 from helpers import *
 
+load_dotenv()
 
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
@@ -20,7 +17,8 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
 SCOPES = ['https://www.googleapis.com/auth/calendar',
-  'profile']
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email']
 API_SERVICE_NAME = 'calendar'
 API_VERSION = 'v3'
 
@@ -29,8 +27,10 @@ OFFSET = time.strftime('%z')
 OFFSET = OFFSET[:3] + ":" + OFFSET[3:]
 
 # configure app
+# look into flask-session for more secure sessions and credentials storing
+# eventually replace this "secrect_key" with something actually secret
 app = flask.Flask(__name__)
-app.secret_key = '\\xac\\xe4\\x1d\\xd6\\xaf\\xdc\\xd1\\xc9\\x91G\\x14\\x9c\\x8f\\xefv\\xf2\\x84\\xd1Zq\\xad\\xd2\\\\!'
+app.secret_key = os.getenv("SECRET_KEY")
 app.static_folder = 'static'
 
 # ensure responses aren't cached
@@ -43,10 +43,9 @@ if app.config["DEBUG"]:
         return response
 
 # configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_FILE_DIR"] = gettempdir()
+app.config["SESSION_FILE_DIR"] = tempfile.gettempdir()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
 
 # Configure oauth2 to work without https locally
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -55,13 +54,6 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 # TODO: implement a users collection to store credentials outside of flask
 client = MongoClient()
 db = client.taskmaster
-
-"""
-IMPORTANT
-
-If there is an invalid grant error, we must re-authorize the user throught the
-authorization page.
-"""
 
 # Index page
 @app.route('/')
